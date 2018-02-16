@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "cmark-gfm.h"
+#include "cmark.h"
 #include "memory.h"
 
 typedef struct {
