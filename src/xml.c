@@ -4,11 +4,10 @@
 #include <assert.h>
 
 #include "config.h"
-#include "cmark-gfm.h"
+#include "cmark.h"
 #include "node.h"
 #include "buffer.h"
 #include "houdini.h"
-#include "syntax_extension.h"
 
 #define BUFFER_SIZE 100
 
@@ -51,12 +50,6 @@ static int S_render_node(cmark_node *node, cmark_event_type ev_type,
       cmark_strbuf_puts(xml, buffer);
     }
 
-    if (node->extension && node->extension->xml_attr_func) {
-      const char* r = node->extension->xml_attr_func(node->extension, node);
-      if (r != NULL)
-        cmark_strbuf_puts(xml, r);
-    }
-
     literal = false;
 
     switch (node->type) {
@@ -67,7 +60,7 @@ static int S_render_node(cmark_node *node, cmark_event_type ev_type,
     case CMARK_NODE_CODE:
     case CMARK_NODE_HTML_BLOCK:
     case CMARK_NODE_HTML_INLINE:
-      cmark_strbuf_puts(xml, " xml:space=\"preserve\">");
+      cmark_strbuf_puts(xml, ">");
       escape_xml(xml, node->as.literal.data, node->as.literal.len);
       cmark_strbuf_puts(xml, "</");
       cmark_strbuf_puts(xml, cmark_node_get_type_string(node));
@@ -107,7 +100,7 @@ static int S_render_node(cmark_node *node, cmark_event_type ev_type,
         escape_xml(xml, node->as.code.info.data, node->as.code.info.len);
         cmark_strbuf_putc(xml, '"');
       }
-      cmark_strbuf_puts(xml, " xml:space=\"preserve\">");
+      cmark_strbuf_puts(xml, ">");
       escape_xml(xml, node->as.code.literal.data, node->as.code.literal.len);
       cmark_strbuf_puts(xml, "</");
       cmark_strbuf_puts(xml, cmark_node_get_type_string(node));
@@ -155,12 +148,8 @@ static int S_render_node(cmark_node *node, cmark_event_type ev_type,
 }
 
 char *cmark_render_xml(cmark_node *root, int options) {
-  return cmark_render_xml_with_mem(root, options, cmark_node_mem(root));
-}
-
-char *cmark_render_xml_with_mem(cmark_node *root, int options, cmark_mem *mem) {
   char *result;
-  cmark_strbuf xml = CMARK_BUF_INIT(mem);
+  cmark_strbuf xml = CMARK_BUF_INIT(cmark_node_mem(root));
   cmark_event_type ev_type;
   cmark_node *cur;
   struct render_state state = {&xml, 0};
