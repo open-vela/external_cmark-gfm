@@ -13,34 +13,19 @@
   (define-ffi-definer defcmark (ffi-lib "libcmark"))
 
   (define _cmark_node_type
-    (_enum '(;; Error status
-             none
+    (_enum '(none
              ;; Block
              document block-quote list item code-block
-             html-block custom-block
-             paragraph heading thematic-break
-             ;; ?? first-block = document
-             ;; ?? last-block = thematic-break
+             html paragraph header hrule
              ;; Inline
-             text softbreak linebreak code html-inline custom-inline
-             emph strong link image
-             ;; ?? first-inline = text
-             ;; ?? last-inline = image
-             )))
+             text softbreak linebreak code inline-html
+             emph strong link image)))
   (define _cmark_list_type
     (_enum '(no_list bullet_list ordered_list)))
   (define _cmark_delim_type
     (_enum '(no_delim period_delim paren_delim)))
   (define _cmark_opts
-    (_bitmask
-     '(sourcepos  = 2 ; include sourcepos attribute on block elements
-       hardbreaks = 4 ; render `softbreak` elements as hard line breaks
-       safe       = 8 ; suppress raw HTML and unsafe links
-       nobreaks   = 16 ; render `softbreak` elements as spaces
-       normalize  = 256 ; legacy (no effect)
-       validate-utf8 = 512 ; validate UTF-8 in the input
-       smart      = 1024 ; straight quotes to curly, ---/-- to em/en dashes
-       )))
+    (_bitmask '(sourcepos = 1 hardbreaks = 2 normalize = 4 smart = 8)))
 
   (define-cpointer-type _node)
 
@@ -71,8 +56,8 @@
   (defcmark cmark_node_get_type_string  (_fun _node -> _bytes))
   (defcmark cmark_node_get_literal      (_fun _node -> _string))
   (defcmark cmark_node_set_literal      (_fun _node _string -> _bool))
-  (defcmark cmark_node_get_heading_level (_fun _node -> _int))
-  (defcmark cmark_node_set_heading_level (_fun _node _int -> _bool))
+  (defcmark cmark_node_get_header_level (_fun _node -> _int))
+  (defcmark cmark_node_set_header_level (_fun _node _int -> _bool))
   (defcmark cmark_node_get_list_type    (_fun _node -> _cmark_list_type))
   (defcmark cmark_node_set_list_type    (_fun _node _cmark_list_type -> _bool))
   (defcmark cmark_node_get_list_delim   (_fun _node -> _cmark_delim_type))
@@ -99,9 +84,6 @@
   (defcmark cmark_node_append_child     (_fun _node _node -> _bool))
   (defcmark cmark_consolidate_text_nodes (_fun _node -> _void))
 
-  (defcmark cmark_version               (_fun -> _int))
-  (defcmark cmark_version_string        (_fun -> _string))
-
   )
 
 ;; Rackety interface
@@ -126,7 +108,7 @@
   (define-syntax-rule (define-getters+setters name [type field ...] ...)
     (define name (list (list 'type (make-getter+setter field) ...) ...)))
   (define-getters+setters getters+setters
-    [heading heading_level] [code-block fence_info]
+    [header header_level] [code-block fence_info]
     [link url title] [image url title]
     [list list_type list_delim list_start list_tight])
 
@@ -144,12 +126,12 @@
             [else '()]))
     (define (assert-no what-not b)
       (when b (error 'cmark->sexpr "unexpected ~a in ~s" what-not type)))
-    (cond [(memq type '(document paragraph heading block-quote list item
+    (cond [(memq type '(document paragraph header block-quote list item
                         emph strong link image))
            (assert-no 'text text)
            (list type info children)]
-          [(memq type '(text code code-block html-block html-inline
-                        softbreak linebreak thematic-break))
+          [(memq type '(text code code-block html inline-html
+                        softbreak linebreak hrule))
            (assert-no 'children (pair? children))
            (list type info text)]
           [else (error 'cmark->sexpr "unknown type: ~s" type)]))
