@@ -122,6 +122,17 @@ bufsize_t _scan_html_tag(const unsigned char *p)
 */
 }
 
+// Try to (liberally) match an HTML tag after first <, returning num of chars matched.
+bufsize_t _scan_liberal_html_tag(const unsigned char *p)
+{
+  const unsigned char *marker = NULL;
+  const unsigned char *start = p;
+/*!re2c
+  [^\n\x00]+ [>] { return (bufsize_t)(p - start); }
+  * { return 0; }
+*/
+}
+
 // Try to match an HTML block tag start line, returning
 // an integer code for the type of block (1-6, matching the spec).
 // #7 is handled by a separate function, below.
@@ -275,7 +286,7 @@ bufsize_t _scan_open_code_fence(const unsigned char *p)
   const unsigned char *start = p;
 /*!re2c
   [`]{3,} / [^`\r\n\x00]*[\r\n] { return (bufsize_t)(p - start); }
-  [~]{3,} / [^\r\n\x00]*[\r\n] { return (bufsize_t)(p - start); }
+  [~]{3,} / [^~\r\n\x00]*[\r\n] { return (bufsize_t)(p - start); }
   * { return 0; }
 */
 }
@@ -318,3 +329,13 @@ bufsize_t _scan_dangerous_url(const unsigned char *p)
 */
 }
 
+// Scans a footnote definition opening.
+bufsize_t _scan_footnote_definition(const unsigned char *p)
+{
+  const unsigned char *marker = NULL;
+  const unsigned char *start = p;
+/*!re2c
+  '[^' ([^\] \r\n\x00\t]+) ']:' [ \t]* { return (bufsize_t)(p - start); }
+  * { return 0; }
+*/
+}
