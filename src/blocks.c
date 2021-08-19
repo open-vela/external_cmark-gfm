@@ -468,6 +468,7 @@ static void process_footnotes(cmark_parser *parser) {
   while ((ev_type = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
     cur = cmark_iter_get_node(iter);
     if (ev_type == CMARK_EVENT_EXIT && cur->type == CMARK_NODE_FOOTNOTE_DEFINITION) {
+      cmark_node_unlink(cur);
       cmark_footnote_create(map, cur);
     }
   }
@@ -514,10 +515,8 @@ static void process_footnotes(cmark_parser *parser) {
     qsort(map->sorted, map->size, sizeof(cmark_map_entry *), sort_footnote_by_ix);
     for (unsigned int i = 0; i < map->size; ++i) {
       cmark_footnote *footnote = (cmark_footnote *)map->sorted[i];
-      if (!footnote->ix) {
-        cmark_node_unlink(footnote->node);
+      if (!footnote->ix)
         continue;
-      }
       cmark_node_append_child(parser->root, footnote->node);
       footnote->node = NULL;
     }
