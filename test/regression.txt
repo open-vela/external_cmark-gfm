@@ -175,7 +175,7 @@ A footnote in a paragraph[^1]
 
 [^1]: a footnote
 .
-<p>A footnote in a paragraph<sup class="footnote-ref"><a href="#fn:1" id="fnref:1">1</a></sup></p>
+<p>A footnote in a paragraph<sup class="footnote-ref"><a href="#fn1" id="fnref1">1</a></sup></p>
 <table>
 <thead>
 <tr>
@@ -185,15 +185,15 @@ A footnote in a paragraph[^1]
 </thead>
 <tbody>
 <tr>
-<td>foot <sup class="footnote-ref"><a href="#fn:1" id="fnref:1:2">1</a></sup></td>
+<td>foot <sup class="footnote-ref"><a href="#fn1" id="fnref1">1</a></sup></td>
 <td>note</td>
 </tr>
 </tbody>
 </table>
 <section class="footnotes">
 <ol>
-<li id="fn:1">
-<p>a footnote <a href="#fnref:1" class="footnote-backref">↩</a> <a href="#fnref:1:2" class="footnote-backref">↩<sup class="footnote-ref">2</sup></a></p>
+<li id="fn1">
+<p>a footnote <a href="#fnref1" class="footnote-backref">↩</a></p>
 </li>
 </ol>
 </section>
@@ -270,24 +270,26 @@ Pull request #128 - Buffer overread in tables extension
 -|</p>
 ````````````````````````````````
 
-Footnotes may be nested inside other footnotes.
+Footnotes may begin with or have a 'w' or a '_' in their reference label.
 
+```````````````````````````````` example footnotes autolink
+This is some text. Sometimes the autolinker splits up text into multiple nodes, hoping it will find a hyperlink, so this text has a footnote whose reference label begins with a `w`.[^widely-cited]
 
-```````````````````````````````` example footnotes
-This is some text. It has a citation.[^citation]
+It has another footnote that contains many different characters (the autolinker was also breaking on `_`).[^sphinx-of-black-quartz_judge-my-vow-0123456789]
 
-[^another-citation]: My second citation.
+[^sphinx-of-black-quartz_judge-my-vow-0123456789]: so does this.
 
-[^citation]: This is a long winded parapgraph that also has another citation.[^another-citation]
+[^widely-cited]: this renders properly.
 .
-<p>This is some text. It has a citation.<sup class="footnote-ref"><a href="#fn1" id="fnref1">1</a></sup></p>
+<p>This is some text. Sometimes the autolinker splits up text into multiple nodes, hoping it will find a hyperlink, so this text has a footnote whose reference label begins with a <code>w</code>.<sup class="footnote-ref"><a href="#fn1" id="fnref1">1</a></sup></p>
+<p>It has another footnote that contains many different characters (the autolinker was also breaking on <code>_</code>).<sup class="footnote-ref"><a href="#fn2" id="fnref2">2</a></sup></p>
 <section class="footnotes">
 <ol>
 <li id="fn1">
-<p>This is a long winded parapgraph that also has another citation.<sup class="footnote-ref"><a href="#fn2" id="fnref2">2</a></sup> <a href="#fnref1" class="footnote-backref">↩</a></p>
+<p>this renders properly. <a href="#fnref1" class="footnote-backref">↩</a></p>
 </li>
 <li id="fn2">
-<p>My second citation. <a href="#fnref2" class="footnote-backref">↩</a></p>
+<p>so does this. <a href="#fnref2" class="footnote-backref">↩</a></p>
 </li>
 </ol>
 </section>
