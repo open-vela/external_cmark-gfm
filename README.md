@@ -1,7 +1,8 @@
 cmark-gfm
 =========
 
-![Actions CI](https://github.com/github/cmark-gfm/actions/workflows/ci.yml/badge.svg)
+[![Build Status]](https://travis-ci.org/github/cmark-gfm)
+[![Windows Build Status]](https://ci.appveyor.com/project/github/cmark)
 
 `cmark-gfm` is an extended version of the C reference implementation of
 [CommonMark], a rationalized version of Markdown syntax with a spec.  This
