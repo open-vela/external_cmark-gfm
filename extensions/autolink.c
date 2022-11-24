@@ -315,7 +315,6 @@ static bool validate_protocol(char protocol[], uint8_t *data, int rewind, int ma
 static void postprocess_text(cmark_parser *parser, cmark_node *text) {
   size_t start = 0;
   size_t offset = 0;
-  size_t depth = 0;
   // `text` is going to be split into a list of nodes containing shorter segments
   // of text, so we detach the memory buffer from text and use `cmark_chunk_dup` to
   // create references to it. Later, `cmark_chunk_to_cstr` is used to convert
@@ -328,10 +327,6 @@ static void postprocess_text(cmark_parser *parser, cmark_node *text) {
   size_t remaining = text->as.literal.len;
 
   while (true) {
-    // postprocess_text can recurse very deeply if there is a very long line of
-    // '@' only.  Stop at a reasonable depth to ensure it cannot crash.
-    if (depth > 1000) break;
-
     size_t link_end;
     uint8_t *at;
     bool auto_mailto = true;
@@ -377,7 +372,6 @@ found_at:
 
     if (rewind == 0) {
       offset += max_rewind + 1;
-      depth++;
       continue;
     }
 
@@ -406,7 +400,6 @@ found_at:
         (!cmark_isalpha(data[start + offset + max_rewind + link_end - 1]) &&
          data[start + offset + max_rewind + link_end - 1] != '.')) {
       offset += max_rewind + link_end;
-      depth++;
       continue;
     }
 
@@ -414,7 +407,6 @@ found_at:
 
     if (link_end == 0) {
       offset += max_rewind + 1;
-      depth++;
       continue;
     }
 
@@ -451,7 +443,6 @@ found_at:
     start += offset + max_rewind + link_end;
     remaining -= offset + max_rewind + link_end;
     offset = 0;
-    depth++;
   }
 
   // Convert the reference to allocated memory.
