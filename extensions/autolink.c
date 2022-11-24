@@ -338,7 +338,6 @@ static void postprocess_text(cmark_parser *parser, cmark_node *text) {
     bool is_xmpp = false;
     size_t rewind;
     size_t max_rewind;
-    size_t nb = 0;
     size_t np = 0;
 
     if (offset >= remaining)
@@ -350,6 +349,7 @@ static void postprocess_text(cmark_parser *parser, cmark_node *text) {
 
     max_rewind = at - (data + start + offset);
 
+found_at:
     for (rewind = 0; rewind < max_rewind; ++rewind) {
       uint8_t c = data[start + offset + max_rewind - rewind - 1];
 
@@ -381,15 +381,19 @@ static void postprocess_text(cmark_parser *parser, cmark_node *text) {
       continue;
     }
 
-    for (link_end = 0; link_end < remaining - offset - max_rewind; ++link_end) {
+    assert(data[start + offset + max_rewind] == '@');
+    for (link_end = 1; link_end < remaining - offset - max_rewind; ++link_end) {
       uint8_t c = data[start + offset + max_rewind + link_end];
 
       if (cmark_isalnum(c))
         continue;
 
-      if (c == '@')
-        nb++;
-      else if (c == '.' && link_end < remaining - offset - max_rewind - 1 &&
+      if (c == '@') {
+        // Found another '@', so go back and try again with an updated offset and max_rewind.
+        offset += max_rewind + 1;
+        max_rewind = link_end - 1;
+        goto found_at;
+      } else if (c == '.' && link_end < remaining - offset - max_rewind - 1 &&
                cmark_isalnum(data[start + offset + max_rewind + link_end + 1]))
         np++;
       else if (c == '/' && is_xmpp)
@@ -398,10 +402,10 @@ static void postprocess_text(cmark_parser *parser, cmark_node *text) {
         break;
     }
 
-    if (link_end < 2 || nb != 1 || np == 0 ||
+    if (link_end < 2 || np == 0 ||
         (!cmark_isalpha(data[start + offset + max_rewind + link_end - 1]) &&
          data[start + offset + max_rewind + link_end - 1] != '.')) {
-      offset += max_rewind + 1;
+      offset += max_rewind + link_end;
       depth++;
       continue;
     }
