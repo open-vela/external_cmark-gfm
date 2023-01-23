@@ -47,6 +47,7 @@ typedef struct bracket {
 #define FLAG_SKIP_HTML_CDATA        (1u << 0)
 #define FLAG_SKIP_HTML_DECLARATION  (1u << 1)
 #define FLAG_SKIP_HTML_PI           (1u << 2)
+#define FLAG_SKIP_HTML_COMMENT      (1u << 3)
 
 typedef struct subject{
   cmark_mem *mem;
@@ -61,6 +62,7 @@ typedef struct subject{
   bracket *last_bracket;
   bufsize_t backticks[MAXBACKTICKS + 1];
   bool scanned_for_backticks;
+  bool no_link_openers;
 } subject;
 
 // Extensions may populate this.
@@ -197,6 +199,7 @@ static void subject_from_buf(cmark_mem *mem, int line_number, int block_offset, 
     e->backticks[i] = 0;
   }
   e->scanned_for_backticks = false;
+  e->no_link_openers = true;
 }
 
 static CMARK_INLINE int isbacktick(int c) { return (c == '`'); }
@@ -557,6 +560,9 @@ static void push_bracket(subject *subj, bool image, cmark_node *inl_text) {
     b->in_bracket_image0 = true;
   }
   subj->last_bracket = b;
+  if (!image) {
+    subj->no_link_openers = false;
+  }
 }
 
 // Assumes the subject has a c at the current position.
@@ -931,19 +937,23 @@ static cmark_node *handle_pointy_brace(subject *subj, int options) {
   // finally, try to match an html tag
   if (subj->pos + 2 <= subj->input.len) {
     int c = subj->input.data[subj->pos];
-    if (c == '!') {
+    if (c == '!' && (subj->flags & FLAG_SKIP_HTML_COMMENT) == 0) {
       c = subj->input.data[subj->pos+1];
       if (c == '-' && subj->input.data[subj->pos+2] == '-') {
-	if (subj->input.data[subj->pos+3] == '>') {
-	  matchlen = 4;
-	} else if (subj->input.data[subj->pos+3] == '-' &&
+        if (subj->input.data[subj->pos+3] == '>') {
+          matchlen = 4;
+        } else if (subj->input.data[subj->pos+3] == '-' &&
                    subj->input.data[subj->pos+4] == '>') {
           matchlen = 5;
         } else {
           matchlen = scan_html_comment(&subj->input, subj->pos + 1);
-          if (matchlen > 0)
+          if (matchlen > 0) {
             matchlen += 1; // prefix "<"
-	}
+          } else { // no match through end of input: set a flag so
+                   // we don't reparse looking for -->:
+            subj->flags |= FLAG_SKIP_HTML_COMMENT;
+          }
+        }
       } else if (c == '[') {
         if ((subj->flags & FLAG_SKIP_HTML_CDATA) == 0) {
           matchlen = scan_html_cdata(&subj->input, subj->pos + 2);
@@ -1147,15 +1157,15 @@ static cmark_node *handle_close_bracket(cmark_parser *parser, subject *subj) {
     return make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("]"));
   }
 
-  if (!opener->active) {
+  // If we got here, we matched a potential link/image text.
+  // Now we check to see if it's a link/image.
+  is_image = opener->image;
+
+  if (!is_image && subj->no_link_openers) {
     // take delimiter off stack
     pop_bracket(subj);
     return make_str(subj, subj->pos - 1, subj->pos - 1, cmark_chunk_literal("]"));
   }
-
-  // If we got here, we matched a potential link/image text.
-  // Now we check to see if it's a link/image.
-  is_image = opener->image;
 
   after_link_text_pos = subj->pos;
 
@@ -1331,32 +1341,11 @@ match:
   process_emphasis(parser, subj, opener->position);
   pop_bracket(subj);
 
-  // Now, if we have a link, we also want to deactivate earlier link
-  // delimiters. (This code can be removed if we decide to allow links
+  // Now, if we have a link, we also want to deactivate links until
+  // we get a new opener. (This code can be removed if we decide to allow links
   // inside links.)
   if (!is_image) {
-    opener = subj->last_bracket;
-    while (opener != NULL) {
-      if (!opener->image) {
-        if (!opener->active) {
-          break;
-        } else {
-          opener->active = false;
-        }
-      }
-      opener = opener->previous;
-    }
-    bool in_bracket_image1 = false;
-    if (opener) {
-      in_bracket_image1 = opener->in_bracket_image1;
-    }
-    bracket *opener2 = subj->last_bracket;
-    while (opener2 != opener) {
-      if (opener2->image) {
-        opener2->in_bracket_image1 = in_bracket_image1;
-      }
-      opener2 = opener2->previous;
-    }
+    subj->no_link_openers = true;
   }
 
   return NULL;
