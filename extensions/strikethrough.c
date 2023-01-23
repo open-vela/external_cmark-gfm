@@ -67,7 +67,6 @@ static delimiter *insert(cmark_syntax_extension *self, cmark_parser *parser,
   strikethrough->end_column = closer->inl_text->start_column + closer->inl_text->as.literal.len - 1;
   cmark_node_free(closer->inl_text);
 
-done:
   delim = closer;
   while (delim != NULL && delim != opener) {
     tmp_delim = delim->previous;
@@ -77,6 +76,7 @@ done:
 
   cmark_inline_parser_remove_delimiter(inline_parser, opener);
 
+done:
   return res;
 }
 
