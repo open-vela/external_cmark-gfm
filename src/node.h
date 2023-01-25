@@ -48,17 +48,7 @@ typedef struct {
   cmark_chunk on_exit;
 } cmark_custom;
 
-enum cmark_node__internal_flags {
-  CMARK_NODE__OPEN = (1 << 0),
-  CMARK_NODE__LAST_LINE_BLANK = (1 << 1),
-  CMARK_NODE__LAST_LINE_CHECKED = (1 << 2),
-
-  // Extensions can register custom flags by calling `cmark_register_node_flag`.
-  // This is the starting value for the custom flags.
-  CMARK_NODE__REGISTER_FIRST = (1 << 3),
-};
-
-typedef uint16_t cmark_node_internal_flags;
+typedef uint16_t cmark_node__internal_flags;
 
 struct cmark_node {
   cmark_strbuf content;
@@ -78,7 +68,7 @@ struct cmark_node {
   int end_column;
   int internal_offset;
   uint16_t type;
-  cmark_node_internal_flags flags;
+  cmark_node__internal_flags flags;
 
   cmark_syntax_extension *extension;
 
@@ -108,15 +98,19 @@ struct cmark_node {
  * which will store the flag value.
  */
 CMARK_GFM_EXPORT
-void cmark_register_node_flag(cmark_node_internal_flags *flags);
+void cmark_register_node_flag(cmark_node__internal_flags *flags);
 
 /**
- * DEPRECATED.
- *
- * This function was added in cmark-gfm version 0.29.0.gfm.7, and was
- * required to be called at program start time, which caused
- * backwards-compatibility issues in applications that use cmark-gfm as a
- * library. It is now a no-op.
+ * Standard node flags. (Initialized using `cmark_init_standard_node_flags`.)
+ */
+extern cmark_node__internal_flags CMARK_NODE__OPEN;
+extern cmark_node__internal_flags CMARK_NODE__LAST_LINE_BLANK;
+extern cmark_node__internal_flags CMARK_NODE__LAST_LINE_CHECKED;
+
+/**
+ * Uses `cmark_register_node_flag` to initialize the standard node flags.
+ * This function should be called at program startup time. Calling it
+ * multiple times has no additional effect.
  */
 CMARK_GFM_EXPORT
 void cmark_init_standard_node_flags();
