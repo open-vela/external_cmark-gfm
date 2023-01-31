@@ -366,11 +366,3 @@ Hello world
 .
 <p>Hello world</p>
 ````````````````````````````````
-
-Issue #424 - emphasis before links
-
-```````````````````````````````` example
-*text* [link](#section)
-.
-<p><em>text</em> <a href="#section">link</a></p>
-````````````````````````````````

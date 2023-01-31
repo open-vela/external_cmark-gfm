@@ -68,16 +68,15 @@ static void *arena_calloc(size_t nmem, size_t size) {
   const size_t align = sizeof(size_t) - 1;
   sz = (sz + align) & ~align;
 
-  struct arena_chunk *chunk;
   if (sz > A->sz) {
-    A->prev = chunk = alloc_arena_chunk(sz, A->prev);
-  } else if (sz > A->sz - A->used) {
-    A = chunk = alloc_arena_chunk(A->sz + A->sz / 2, A);
-  } else {
-    chunk = A;
+    A->prev = alloc_arena_chunk(sz, A->prev);
+    return (uint8_t *) A->prev->ptr + sizeof(size_t);
   }
-  void *ptr = (uint8_t *) chunk->ptr + chunk->used;
-  chunk->used += sz;
+  if (sz > A->sz - A->used) {
+    A = alloc_arena_chunk(A->sz + A->sz / 2, A);
+  }
+  void *ptr = (uint8_t *) A->ptr + A->used;
+  A->used += sz;
   *((size_t *) ptr) = sz - sizeof(size_t);
   return (uint8_t *) ptr + sizeof(size_t);
 }
@@ -99,6 +98,6 @@ static void arena_free(void *ptr) {
 
 cmark_mem CMARK_ARENA_MEM_ALLOCATOR = {arena_calloc, arena_realloc, arena_free};
 
-cmark_mem *cmark_get_arena_mem_allocator(void) {
+cmark_mem *cmark_get_arena_mem_allocator() {
   return &CMARK_ARENA_MEM_ALLOCATOR;
 }

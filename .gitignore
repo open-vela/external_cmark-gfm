@@ -33,7 +33,6 @@ build
 cmark.dSYM/*
 cmark
 .vscode
-.DS_Store
 
 # Testing and benchmark
 alltests.md
