@@ -83,14 +83,6 @@ struct cmark_node {
 
   cmark_syntax_extension *extension;
 
-  /**
-   * Used during cmark_render() to cache the most recent non-NULL
-   * extension, if you go up the parent chain like this:
-   *
-   * node->parent->...parent->extension
-   */
-  cmark_syntax_extension *ancestor_extension;
-
   union {
     int ref_ix;
     int def_count;
@@ -128,7 +120,7 @@ void cmark_register_node_flag(cmark_node_internal_flags *flags);
  * library. It is now a no-op.
  */
 CMARK_GFM_EXPORT
-void cmark_init_standard_node_flags(void);
+void cmark_init_standard_node_flags();
 
 static CMARK_INLINE cmark_mem *cmark_node_mem(cmark_node *node) {
   return node->content.mem;
