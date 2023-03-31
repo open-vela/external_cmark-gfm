@@ -5,16 +5,6 @@
 #include "node.h"
 #include "syntax_extension.h"
 
-/**
- * Expensive safety checks are off by default, but can be enabled
- * by calling cmark_enable_safety_checks().
- */
-static bool enable_safety_checks = false;
-
-void cmark_enable_safety_checks(bool enable) {
-  enable_safety_checks = enable;
-}
-
 static void S_node_unlink(cmark_node *node);
 
 #define NODE_MEM(node) cmark_node_mem(node)
@@ -80,6 +70,8 @@ bool cmark_node_can_contain_type(cmark_node *node, cmark_node_type child_type) {
 }
 
 static bool S_can_contain(cmark_node *node, cmark_node *child) {
+  cmark_node *cur;
+
   if (node == NULL || child == NULL) {
     return false;
   }
@@ -87,16 +79,14 @@ static bool S_can_contain(cmark_node *node, cmark_node *child) {
     return 0;
   }
 
-  if (enable_safety_checks) {
-    // Verify that child is not an ancestor of node or equal to node.
-    cmark_node *cur = node;
-    do {
-      if (cur == child) {
-        return false;
-      }
-      cur = cur->parent;
-    } while (cur != NULL);
-  }
+  // Verify that child is not an ancestor of node or equal to node.
+  cur = node;
+  do {
+    if (cur == child) {
+      return false;
+    }
+    cur = cur->parent;
+  } while (cur != NULL);
 
   return cmark_node_can_contain_type(node, (cmark_node_type) child->type);
 }
