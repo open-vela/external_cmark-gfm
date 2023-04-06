@@ -75,11 +75,9 @@ int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
           }
           offset += fuzz_config.closelen;
         }
-        if (markdown_size + endlen <= sizeof(markdown)) {
-          memcpy(&markdown[markdown_size], &markdown0[offset],
-                 endlen);
-          markdown_size += endlen;
-        }
+        memcpy(&markdown[markdown_size], &markdown0[offset],
+               endlen);
+        markdown_size += endlen;
       } else {
         markdown_size = markdown_size0;
         memcpy(markdown, markdown0, markdown_size);
