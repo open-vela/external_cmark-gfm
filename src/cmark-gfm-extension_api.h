@@ -426,7 +426,7 @@ int cmark_parser_get_line_number(cmark_parser *parser);
  * Here, offset will first be 0, then 5 (the index of the 'f' character).
  */
 CMARK_GFM_EXPORT
-int cmark_parser_get_offset(cmark_parser *parser);
+bufsize_t cmark_parser_get_offset(cmark_parser *parser);
 
 /**
  * Return the offset in 'columns' in the line being processed.
@@ -460,7 +460,7 @@ int cmark_parser_get_offset(cmark_parser *parser);
  * 'true'.
  */
 CMARK_GFM_EXPORT
-int cmark_parser_get_column(cmark_parser *parser);
+bufsize_t cmark_parser_get_column(cmark_parser *parser);
 
 /** Return the absolute index in bytes of the first nonspace
  * character coming after the offset as returned by
@@ -657,7 +657,7 @@ unsigned char cmark_inline_parser_peek_char(cmark_inline_parser *parser);
 /** Get the character located 'pos' bytes in the current line.
  */
 CMARK_GFM_EXPORT
-unsigned char cmark_inline_parser_peek_at(cmark_inline_parser *parser, int pos);
+unsigned char cmark_inline_parser_peek_at(cmark_inline_parser *parser, bufsize_t pos);
 
 /** Whether the inline parser has reached the end of the current line
  */
