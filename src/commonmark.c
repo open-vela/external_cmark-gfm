@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include "config.h"
 #include "cmark-gfm.h"
@@ -53,14 +54,14 @@ static CMARK_INLINE void outc(cmark_renderer *renderer, cmark_node *node,
   if (needs_escaping) {
     if (escape == URL && cmark_isspace((char)c)) {
       // use percent encoding for spaces
-      snprintf(encoded, ENCODED_SIZE, "%%%2X", c);
+      snprintf(encoded, ENCODED_SIZE, "%%%2" PRIX32, c);
       cmark_strbuf_puts(renderer->buffer, encoded);
       renderer->column += 3;
     } else if (cmark_ispunct((char)c)) {
       cmark_render_ascii(renderer, "\\");
       cmark_render_code_point(renderer, c);
     } else { // render as entity
-      snprintf(encoded, ENCODED_SIZE, "&#%d;", c);
+      snprintf(encoded, ENCODED_SIZE, "&#%" PRId32 ";", c);
       cmark_strbuf_puts(renderer->buffer, encoded);
       renderer->column += (int)strlen(encoded);
     }
