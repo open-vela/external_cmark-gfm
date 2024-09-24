@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
+#include <inttypes.h>
 
 #include "config.h"
 #include "cmark_ctype.h"
@@ -43,7 +44,7 @@ void cmark_strbuf_grow(cmark_strbuf *buf, bufsize_t target_size) {
 
   if (target_size > (bufsize_t)(INT32_MAX / 2)) {
     fprintf(stderr,
-      "[cmark] cmark_strbuf_grow requests buffer with size > %d, aborting\n",
+      "[cmark] cmark_strbuf_grow requests buffer with size > %" PRId32 ", aborting\n",
          (INT32_MAX / 2));
     abort();
   }
