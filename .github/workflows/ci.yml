@@ -1,83 +1,18 @@
-name: CI tests
+# This is a basic workflow to help you get started with Actions
 
-on: [push, workflow_dispatch]
+name: CI
 
+# Controls when the workflow will run
+on:
+  pull_request:
+    types:
+      - review
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  linux:
-
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        cmake_opts:
-          - '-DCMARK_SHARED=ON'
-          - ''
-        compiler:
-          - c: 'clang'
-            cpp: 'clang++'
-          - c: 'gcc'
-            cpp: 'g++'
-    env:
-       CMAKE_OPTIONS: ${{ matrix.cmake_opts }}
-       CC: ${{ matrix.compiler.c }}
-       CXX: ${{ matrix.compiler.cpp }}
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: Install valgrind
-      run: |
-         sudo apt install -y valgrind
-    - name: Build and test
-      run: |
-         make
-         make test
-         make leakcheck
-
-  macos:
-
-    runs-on: macOS-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        cmake_opts:
-          - '-DCMARK_SHARED=ON'
-          - ''
-        compiler:
-          - c: 'clang'
-            cpp: 'clang++'
-          - c: 'gcc'
-            cpp: 'g++'
-    env:
-       CMAKE_OPTIONS: ${{ matrix.cmake_opts }}
-       CC: ${{ matrix.compiler.c }}
-       CXX: ${{ matrix.compiler.cpp }}
-
-    steps:
-    - uses: actions/checkout@v1
-    - name: Build and test
-      env:
-         CMAKE_OPTIONS: -DCMARK_SHARED=OFF
-      run: |
-         make
-         make test
-
-  windows:
-
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        cmake_opts:
-          - '-DCMARK_SHARED=ON'
-          - ''
-    env:
-       CMAKE_OPTIONS: ${{ matrix.cmake_opts }}
-
-    steps:
-    - uses: actions/checkout@v1
-    - uses: ilammy/msvc-dev-cmd@v1
-    - name: Build and test
-      run: |
-        chcp 65001
-        nmake.exe /nologo /f Makefile.nmake test
-      shell: cmd
+  ci:
+    uses: open-vela/public-actions/.github/workflows/ci.yml@trunk
+    secrets: inherit
